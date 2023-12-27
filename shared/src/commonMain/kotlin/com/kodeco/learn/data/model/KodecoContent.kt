@@ -34,6 +34,10 @@
 
 package com.kodeco.learn.data.model
 
+import com.kodeco.learn.data.KodecoSerializer
+import kotlinx.serialization.Serializable
+
+@Serializable(with = KodecoSerializer::class)
 enum class PLATFORM(val value: String) {
 
   ALL("All"),
@@ -45,6 +49,7 @@ enum class PLATFORM(val value: String) {
   GROWTH("Growth")
 }
 
+@Serializable
 data class KodecoContent(
   val platform: PLATFORM,
   val url: String,
