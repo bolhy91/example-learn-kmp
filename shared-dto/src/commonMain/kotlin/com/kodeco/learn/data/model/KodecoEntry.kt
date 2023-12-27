@@ -33,7 +33,9 @@
  */
 
 package com.kodeco.learn.data.model
-
+import com.kodeco.learn.platform.Parcelable
+import com.kodeco.learn.platform.Parcelize
+@Parcelize
 data class KodecoEntry(
   val id: String = "",
   val link: String = "",
@@ -43,4 +45,4 @@ data class KodecoEntry(
   val platform: PLATFORM = PLATFORM.ALL,
   val imageUrl: String = "",
   val bookmarked: Boolean = false
-)
+): Parcelable

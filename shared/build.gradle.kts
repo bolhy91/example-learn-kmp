@@ -41,6 +41,7 @@ plugins {
   alias(libs.plugins.jetbrains.kotlin.multiplatform)
   alias(libs.plugins.cash.sqldelight)
   alias(libs.plugins.jetbrains.kotlin.serialization)
+  alias(libs.plugins.jetbrains.kotlin.parcelize)
 }
 
 version = "2.0"
@@ -85,6 +86,8 @@ kotlin {
     it.binaries.framework {
       baseName = "SharedKit"
       xcf.add(this)
+
+      export(project(":shared-dto"))
     }
   }
 
@@ -95,6 +98,7 @@ kotlin {
       dependencies {
         implementation(libs.kotlinx.datetime)
         implementation(libs.kotlinx.serialization.json)
+        api(project(":shared-dto"))
 
         implementation(libs.okio)
         implementation(libs.korio)
@@ -132,4 +136,8 @@ kotlin {
       }
     }
   }
+}
+
+kotlin.sourceSets.all {
+  languageSettings.optIn("kotlin.RequiresOptIn")
 }
