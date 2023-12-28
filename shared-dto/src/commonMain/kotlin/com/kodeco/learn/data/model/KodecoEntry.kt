@@ -35,7 +35,10 @@
 package com.kodeco.learn.data.model
 import com.kodeco.learn.platform.Parcelable
 import com.kodeco.learn.platform.Parcelize
+import kotlinx.serialization.Serializable
+
 @Parcelize
+@Serializable
 data class KodecoEntry(
   val id: String = "",
   val link: String = "",

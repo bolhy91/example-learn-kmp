@@ -34,11 +34,16 @@
 
 package com.kodeco.learn.domain
 
+import com.kodeco.learn.data.model.GravatarEntry
 import com.kodeco.learn.data.model.KodecoEntry
 import com.kodeco.learn.data.model.PLATFORM
 import korlibs.io.serialization.xml.Xml
 import korlibs.io.util.substringAfterOrNull
 import korlibs.io.util.substringBeforeOrNull
+import com.kodeco.learn.data.FeedAPI
+import com.kodeco.learn.platform.Logger
+import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.coroutineScope
 
 private const val TAG = "GetFeedData"
 
@@ -52,7 +57,67 @@ private const val WEBSITE_PREVIEW_BOOK_START_DELIMITER =
 private const val WEBSITE_PREVIEW_BOOK_END_DELIMITER = "\" />"
 
 public class GetFeedData {
-  //TODO: Chapter 12 - Networking
+
+  public suspend fun invokeFetchKodecoEntry(
+    platform: PLATFORM,
+    imageUrl: String,
+    feedUrl: String,
+    onSuccess: (List<KodecoEntry>) -> Unit,
+    onFailure: (Exception) -> Unit
+  ) {
+    try {
+      //2
+      val result = FeedAPI.fetchKodecoEntry(feedUrl)
+
+      Logger.d(TAG, "invokeFetchKodecoEntry | feedUrl=$feedUrl")
+
+      val xml = Xml.parse(result.bodyAsText())
+
+      val feed = mutableListOf<KodecoEntry>()
+      for (node in xml.allNodeChildren) {
+        val parsed = parseNode(platform, imageUrl, node)
+
+        if (parsed != null) {
+          feed += parsed
+        }
+      }
+      coroutineScope {
+        onSuccess(feed)
+      }
+    } catch (e: Exception) {
+      Logger.e(TAG, "Unable to fetch feed:$feedUrl. Error: $e")
+      coroutineScope {
+        onFailure(e)
+      }
+    }
+  }
+
+
+  public suspend fun invokeGetMyGravatar(
+    hash: String,
+    onSuccess: (GravatarEntry) -> Unit,
+    onFailure: (Exception) -> Unit
+  ) {
+    try {
+      val result = FeedAPI.fetchMyGravatar(hash)
+      Logger.d(TAG, "invokeGetMyGravatar | result=$result")
+      if (result.entry.isEmpty()) {
+        coroutineScope {
+          onFailure(Exception("No profile found for hash=$hash"))
+        }
+      } else {
+        coroutineScope {
+          onSuccess(result.entry[0])
+        }
+      }
+    } catch (e: Exception) {
+      Logger.e(TAG, "Unable to fetch my gravatar. Error: $e")
+      coroutineScope {
+        onFailure(e)
+      }
+    }
+  }
+
 }
 
 private fun parsePage(url: String, content: String): String {

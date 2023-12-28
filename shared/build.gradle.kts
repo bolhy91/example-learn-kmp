@@ -99,6 +99,13 @@ kotlin {
         implementation(libs.kotlinx.datetime)
         implementation(libs.kotlinx.serialization.json)
         api(project(":shared-dto"))
+        // ktor
+        implementation(libs.ktor.client.core)
+        implementation(libs.ktor.client.serialization)
+
+        implementation(libs.ktor.client.content.negotiation)
+        implementation(libs.ktor.serialization.kotlinx.json)
+        implementation(libs.ktor.client.logging)
 
         implementation(libs.okio)
         implementation(libs.korio)
@@ -109,12 +116,17 @@ kotlin {
       dependencies {
         implementation(kotlin("test-common"))
         implementation(kotlin("test-annotations-common"))
+        implementation(kotlin("test-junit"))
+        implementation(libs.junit)
+        implementation(libs.ktor.client.mock)
+
       }
     }
 
     getByName("androidMain") {
       dependencies {
         implementation(libs.cash.sqldelight.android)
+        implementation(libs.ktor.client.android)
       }
     }
 
@@ -133,6 +145,7 @@ kotlin {
     getByName("iosMain") {
       dependencies {
         implementation(libs.cash.sqldelight.native)
+        implementation(libs.ktor.client.ios)
       }
     }
   }
