@@ -66,17 +66,12 @@ public class GetFeedData {
     onFailure: (Exception) -> Unit
   ) {
     try {
-      //2
       val result = FeedAPI.fetchKodecoEntry(feedUrl)
-
       Logger.d(TAG, "invokeFetchKodecoEntry | feedUrl=$feedUrl")
-
       val xml = Xml.parse(result.bodyAsText())
-
       val feed = mutableListOf<KodecoEntry>()
       for (node in xml.allNodeChildren) {
         val parsed = parseNode(platform, imageUrl, node)
-
         if (parsed != null) {
           feed += parsed
         }
@@ -92,31 +87,35 @@ public class GetFeedData {
     }
   }
 
+  public suspend fun invokeFetchImageUrlFromLink(
+    link: String
+  ): String {
+    return try {
+      val result = FeedAPI.fetchImageUrlFromLink(link)
+      parsePage(link, result.bodyAsText())
+    } catch (e: Exception) {
+      ""
+    }
+  }
 
   public suspend fun invokeGetMyGravatar(
     hash: String,
-    onSuccess: (GravatarEntry) -> Unit,
-    onFailure: (Exception) -> Unit
-  ) {
-    try {
+  ): GravatarEntry {
+    return try {
       val result = FeedAPI.fetchMyGravatar(hash)
       Logger.d(TAG, "invokeGetMyGravatar | result=$result")
+
       if (result.entry.isEmpty()) {
-        coroutineScope {
-          onFailure(Exception("No profile found for hash=$hash"))
-        }
+        GravatarEntry()
       } else {
-        coroutineScope {
-          onSuccess(result.entry[0])
-        }
+        result.entry[0]
       }
     } catch (e: Exception) {
       Logger.e(TAG, "Unable to fetch my gravatar. Error: $e")
-      coroutineScope {
-        onFailure(e)
-      }
+      GravatarEntry()
     }
   }
+
 
 }
 

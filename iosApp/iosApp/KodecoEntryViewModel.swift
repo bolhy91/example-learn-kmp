@@ -62,49 +62,49 @@ class KodecoEntryViewModel: ObservableObject {
     }
   }
 
-  func fetchFeeds() {
-    FeedClient.shared.fetchFeeds { platform, items in
-      Logger().d(tag: TAG, message: "fetchFeeds: \(items.count) items | platform: \(platform)")
-      DispatchQueue.main.async {
-        self.items[platform] = items
-      }
-    }
-  }
-
-  @MainActor
-  func fetchLinkImage() {
-    for platform in self.items.keys {
-      guard let items = self.items[platform] else { continue }
-      let subsetItems = Array(items[0 ..< Swift.min(self.fetchNImages, items.count)])
-      for item in subsetItems {
-        FeedClient.shared.fetchLinkImage(item.platform, item.id, item.link) { id, url, platform in
-          guard let item = self.items[platform.description]?.first(where: { $0.id == id }) else {
-            return
-          }
-
-          guard var list = self.items[platform.description] else {
-            return
-          }
-          guard let index = list.firstIndex(of: item) else {
-            return
-          }
-
-          list[index] = item.doCopy(
-            id: item.id,
-            link: item.link,
-            title: item.title,
-            summary: item.summary,
-            updated: item.updated,
-            platform: item.platform,
-            imageUrl: url,
-            bookmarked: item.bookmarked
-          )
-
-          self.items[platform.description] = list
+    func fetchFeeds() {
+      FeedClient.shared.fetchFeeds { platform, items in
+        Logger().d(tag: TAG, message: "fetchFeeds: \(items.count) items | platform: \(platform)")
+        DispatchQueue.main.async {
+          self.items[platform] = items
+          self.fetchLinkImage()
         }
       }
     }
-  }
+
+
+    @MainActor
+    func fetchLinkImage() {
+      for platform in self.items.keys {
+        guard let items = self.items[platform] else { continue }
+        let subsetItems = Array(items[0 ..< Swift.min(self.fetchNImages, items.count)])
+        for item in subsetItems {
+          FeedClient.shared.fetchLinkImage(item.link) { url in
+            guard var list = self.items[platform.description] else {
+              return
+            }
+            guard let index = list.firstIndex(of: item) else {
+              return
+            }
+
+            list[index] = item.doCopy(
+              id: item.id,
+              link: item.link,
+              title: item.title,
+              summary: item.summary,
+              updated: item.updated,
+              platform: item.platform,
+              imageUrl: url,
+              bookmarked: item.bookmarked
+            )
+
+            self.items[platform.description] = list
+          }
+        }
+      }
+    }
+
+
 
   func fetchAllBookmarks() {
     BookmarkClient.shared.fetchBookmarks { items in

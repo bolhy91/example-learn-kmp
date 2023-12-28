@@ -15,6 +15,8 @@ import kotlinx.serialization.json.Json
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
+import io.ktor.http.ContentType
 
 
 public const val GRAVATAR_URL = "https://en.gravatar.com/"
@@ -39,6 +41,10 @@ public object FeedAPI {
     }
 
     public suspend fun fetchKodecoEntry(feedUrl: String): HttpResponse = client.get(feedUrl)
+
+    public suspend fun fetchImageUrlFromLink(link: String): HttpResponse = client.get(link) {
+        header(HttpHeaders.Accept, ContentType.Text.Html)
+    }
 
     public suspend fun fetchMyGravatar(hash: String): GravatarProfile =
         client.get("$GRAVATAR_URL$hash$GRAVATAR_RESPONSE_FORMAT").body()

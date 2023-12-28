@@ -79,8 +79,20 @@ class FeedViewModel : ViewModel(), FeedData {
   override fun onNewDataAvailable(items: List<KodecoEntry>, platform: PLATFORM, exception: Exception?) {
     Logger.d(TAG, "onNewDataAvailable | platform=$platform items=${items.size}")
     viewModelScope.launch {
-      _items[platform] = items
+      _items[platform] = if (items.size > FETCH_N_IMAGES) {
+        items.subList(0, FETCH_N_IMAGES)
+      } else{
+        items
+      }
+      for (item in _items[platform]!!) {
+        fetchLinkImage(platform, item.id, item.link)
+      }
     }
+  }
+
+  private fun fetchLinkImage(platform: PLATFORM, id: String, link: String) {
+    Logger.d(TAG, "fetchLinkImage | link=$link")
+    presenter.fetchLinkImage(platform, id, link, this)
   }
 
   override fun onNewImageUrlAvailable(
@@ -90,6 +102,14 @@ class FeedViewModel : ViewModel(), FeedData {
     exception: Exception?
   ) {
     Logger.d(TAG, "onNewImageUrlAvailable | platform=$platform | id=$id | url=$url")
+    viewModelScope.launch {
+      val item = _items[platform]?.firstOrNull { it.id == id } ?: return@launch
+      val list = _items[platform]?.toMutableList() ?: return@launch
+      val index = list.indexOf(item)
+
+      list[index] = item.copy(imageUrl = url)
+      _items[platform] = list
+    }
   }
 
   override fun onMyGravatarData(item: GravatarEntry) {

@@ -44,7 +44,12 @@ import com.kodeco.learn.platform.Logger
 import io.ktor.utils.io.core.toByteArray
 import korlibs.crypto.md5
 import korlibs.io.async.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 private const val TAG = "FeedPresenter"
@@ -117,16 +122,25 @@ class FeedPresenter(private val feed: GetFeedData) {
   }
 
   public fun fetchMyGravatar(cb: FeedData) {
-    Logger.d(TAG, "fetchMyGravatar")
-
-    MainScope().launch {
-      feed.invokeGetMyGravatar(
-        hash = GRAVATAR_EMAIL.toByteArray().md5().toString(),
-        onSuccess = { cb.onMyGravatarData(it) },
-        onFailure = { cb.onMyGravatarData(GravatarEntry()) }
+    CoroutineScope(Dispatchers.IO).launch {
+      val profile = feed.invokeGetMyGravatar(
+        hash = GRAVATAR_EMAIL.toByteArray().md5().toString()
       )
+      withContext(Dispatchers.Main) {
+        cb.onMyGravatarData(profile)
+      }
     }
   }
+
+  public suspend fun fetchLinkImage(link: String): String {
+    return CoroutineScope(Dispatchers.IO).async {
+      feed.invokeFetchImageUrlFromLink(
+        link
+      )
+    }.await()
+  }
+
+
 
   public fun fetchAllFeeds(cb: FeedData) {
     Logger.d(TAG, "fetchAllFeeds")

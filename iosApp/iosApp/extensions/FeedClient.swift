@@ -36,7 +36,7 @@ public class FeedClient {
   private init() { }
 
   public typealias FeedHandler = (_ platform: String, _ items: [KodecoEntry]) -> Void
-  public typealias FeedHandlerImage = (_ id: String, _ url: String, _ platform: PLATFORM) -> Void
+  public typealias FeedHandlerImage = (_ url: String) -> Void
 
   public typealias ProfileHandler = (_ profile: GravatarEntry) -> Void
 
@@ -63,9 +63,19 @@ public class FeedClient {
       handler?(PLATFORM.all.description(), feedPresenter.allFeeds)
   }
 
-  public func fetchLinkImage(_ platform: PLATFORM, _ id: String, _ link: String, completion: @escaping FeedHandlerImage) {
-    handlerImage = completion
-  }
+    @MainActor
+    public func fetchLinkImage(_ link: String, completion: @escaping FeedHandlerImage) {
+      Task {
+        do {
+          let result = try await feedPresenter.fetchLinkImage(link: link)
+          completion(result)
+        } catch {
+          Logger().e(tag: TAG, message: "Unable to fetch article image link")
+        }
+      }
+    }
+
+
 }
 
 extension FeedClient: FeedData {
@@ -76,7 +86,7 @@ extension FeedClient: FeedData {
 
   public func onNewImageUrlAvailable(id: String, url: String, platform: PLATFORM, exception: KotlinException?) {
     Logger().d(tag: TAG, message: "onNewImageUrlAvailable")
-    self.handlerImage?(id, url, platform)
+    self.handlerImage?(url)
   }
 
   public func onMyGravatarData(item: GravatarEntry) {
